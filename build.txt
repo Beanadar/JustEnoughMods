@@ -1,0 +1,5 @@
+displayName = Just Enough Mods
+author = Beanadar
+version = 0.1
+side = Client
+homepage = https://github.com/Beanadar/JustEnoughMods

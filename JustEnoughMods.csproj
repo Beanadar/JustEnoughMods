@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\tModLoader.targets" />
+  <PropertyGroup>
+    <AssemblyName>JustEnoughMods</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <Target Name="CopyToProton" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT'">
+    <Copy SourceFiles="$(HOME)/.local/share/Terraria/tModLoader/Mods/JustEnoughMods.tmod"
+          DestinationFolder="$(HOME)/.local/share/Steam/steamapps/compatdata/1281930/pfx/drive_c/users/steamuser/Documents/My Games/Terraria/tModLoader/Mods" />
+  </Target>
+</Project>
