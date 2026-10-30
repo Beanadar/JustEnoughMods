@@ -13,7 +13,7 @@ public class Pack
 {
 	public string Name = "Pack";
 	public const string TreeIcon = "@tree";
-	public string Icon = TreeIcon;    // имя предмета (ItemID.Search) или @tree
+	public string Icon = TreeIcon;    // item name (ItemID.Search) or @tree
 	public bool Favorite;
 	public double PlaySeconds;
 	public List<string> Enabled = new();
@@ -45,9 +45,9 @@ public class Pack
 public class StoreState
 {
 	public List<string> Active = new();
-	/// <summary>Когда менялся набор активных сборок. Моды, скачанные позже, показываются как новые.</summary>
+	/// <summary>When the set of active packs last changed. Mods downloaded after that are shown as new.</summary>
 	public DateTime ActivatedAt = DateTime.MinValue;
-	/// <summary>После перезагрузки вернуться в меню сборок.</summary>
+	/// <summary>Return to the packs menu after the reload.</summary>
 	public bool ReturnToPacks;
 	public bool MigratedTml;
 }
@@ -58,15 +58,15 @@ public static class PackStore
 
 	public static string Root => Path.Combine(Main.SavePath, "JustEnoughMods");
 	public static string PacksDir => Path.Combine(Root, "Packs");
-	/// <summary>Активные моды. Имя папки — то, что tML пишет внизу меню, поэтому оно служебное и не показывается (надпись рисуем сами).</summary>
+	/// <summary>Root of the active-mods folders.</summary>
 	public static string ActiveRoot => Path.Combine(Root, "active");
 
-	/// <summary>Папка, из которой tML сейчас берёт моды сборок (или null).</summary>
+	/// <summary>Folder tML currently loads pack mods from (or null).</summary>
 	public static string CurrentActiveDir => Tml.ModPackActive is string d && d.StartsWith(ActiveRoot) ? d : null;
 
 	/// <summary>
-	/// Старые папки активных модов. Загруженные .tmod заняты игрой (под Windows/Wine их не удалить),
-	/// поэтому каждая пересборка — новая папка, а старые удаляются, когда освободятся.
+	/// Old active-mods folders. Loaded .tmod files are locked by the game (can't be deleted on Windows/Wine),
+	/// so every rebuild uses a new folder and old ones are deleted once they're free.
 	/// </summary>
 	public static void CleanupOldActiveDirs()
 	{
@@ -105,14 +105,14 @@ public static class PackStore
 			try {
 				var p = JsonConvert.DeserializeObject<Pack>(File.ReadAllText(json));
 				p.Dir = dir;
-				if (p.Icon == Pack.TreeIcon && p.Name != "Default") { // иконку не выбирали — случайный предмет
+				if (p.Icon == Pack.TreeIcon && p.Name != "Default") { // no icon chosen: use a random item
 					p.Icon = RandomItemIcon();
 					p.Save();
 				}
 				Packs.Add(p);
 			}
 			catch (Exception e) {
-				JemMod.Instance?.Logger.Warn($"Битый pack.json: {json}", e);
+				JemMod.Instance?.Logger.Warn($"Broken pack.json: {json}", e);
 			}
 		}
 		State.Active.RemoveAll(id => Packs.All(p => p.Id != id));
@@ -133,7 +133,7 @@ public static class PackStore
 		return p;
 	}
 
-	/// <summary>Случайный ванильный предмет — иконка, пока игрок не выбрал свою.</summary>
+	/// <summary>Random vanilla item, used as the icon until the player picks one.</summary>
 	public static string RandomItemIcon()
 	{
 		var rnd = new Random();
@@ -157,7 +157,7 @@ public static class PackStore
 		return id;
 	}
 
-	/// <summary>Есть изменения (вкл/выкл, удаление активной, обновление), которые применятся перезагрузкой при выходе из меню.</summary>
+	/// <summary>Unapplied changes (toggle, deleting an active pack, update); applied by a reload when leaving the menu.</summary>
 	public static bool Pending;
 
 	private const string DeleteMarker = "DELETED";
@@ -171,21 +171,21 @@ public static class PackStore
 			Directory.Delete(p.Dir, true);
 		}
 		catch {
-			// файлы активной сборки заняты игрой — удалим при следующем запуске
+			// files of an active pack are locked by the game; delete on next load
 			File.WriteAllText(Path.Combine(p.Dir, DeleteMarker), "");
 		}
 	}
 
-	// ---------- версия .tmod без загрузки мода ----------
+	// ---------- .tmod version without loading the mod ----------
 
 	public static Version ReadTmodVersion(string path)
 	{
 		try {
 			using var r = new BinaryReader(File.OpenRead(path));
 			r.ReadBytes(4);       // "TMOD"
-			r.ReadString();       // версия tML
-			r.ReadBytes(20 + 256 + 4); // хэш, подпись, длина данных
-			r.ReadString();       // имя
+			r.ReadString();       // tML version
+			r.ReadBytes(20 + 256 + 4); // hash, signature, data length
+			r.ReadString();       // name
 			return Version.Parse(r.ReadString());
 		}
 		catch {
@@ -193,9 +193,9 @@ public static class PackStore
 		}
 	}
 
-	// ---------- активация ----------
+	// ---------- activation ----------
 
-	/// <summary>Собирает _active из активных сборок (при совпадениях — более новая версия) и включает её в tML. Возвращает моды для enabled.json.</summary>
+	/// <summary>Builds a new active-mods folder from the active packs (newest version wins on conflicts) and points tML at it. Returns the mods for enabled.json.</summary>
 	private static HashSet<string> BuildActive()
 	{
 		var chosen = new Dictionary<string, (string path, Version ver)>();
@@ -225,8 +225,8 @@ public static class PackStore
 	}
 
 	/// <summary>
-	/// _active надо пересобрать. Делается только между загрузками модов (перезагрузка, выход из игры):
-	/// если подменить файлы посреди сессии, tML видит другие пути и перед одиночной игрой требует перезагрузку.
+	/// The active-mods folder needs a rebuild. Only done between mod loads (reload, game exit):
+	/// swapping files mid-session changes paths, and tML then demands a reload before singleplayer.
 	/// </summary>
 	public static bool ActiveDirty;
 
@@ -240,11 +240,11 @@ public static class PackStore
 			SaveState();
 		}
 		catch (Exception e) {
-			JemMod.Instance?.Logger.Error("Не удалось пересобрать активные моды", e);
+			JemMod.Instance?.Logger.Error("Failed to rebuild active mods", e);
 		}
 	}
 
-	/// <summary>Применяет активные сборки и перезагружает моды.</summary>
+	/// <summary>Applies the active packs and reloads mods.</summary>
 	public static void ApplyAndReload(bool returnToPacks = true)
 	{
 		Pending = false;
@@ -261,7 +261,7 @@ public static class PackStore
 	}
 
 	/// <summary>
-	/// После загрузки: сборки tML → сборки JEM (один раз), и если модов вне сборок включено — сборка Default из них.
+	/// After load: convert tML mod packs to JEM packs (once); if mods are enabled outside any pack, make a Default pack from them.
 	/// </summary>
 	public static void MigrateAndEnsureDefault()
 	{
@@ -271,14 +271,14 @@ public static class PackStore
 				if (Packs.Any(p => p.Name == name))
 					continue;
 				var (pack, missing) = ImportTml(dir);
-				JemMod.Instance.Logger.Info($"Сборка tML «{name}» перенесена" + (missing.Count > 0 ? $", нет на диске: {string.Join(", ", missing)}" : ""));
+				JemMod.Instance.Logger.Info($"Migrated tML pack '{name}'" + (missing.Count > 0 ? $", missing on disk: {string.Join(", ", missing)}" : ""));
 			}
 			State.MigratedTml = true;
 			SaveState();
 		}
 
 		if (ActivePacks.Any()) {
-			// _active потерялась или пустая (например, после сбоя) — пересобрать, применится при следующем запуске
+			// active folder missing or stale (e.g. after a crash): rebuild, takes effect on next load
 			var expected = ActivePacks.SelectMany(p => p.ModNames()).ToHashSet();
 			string cur = CurrentActiveDir;
 			var present = cur != null && Directory.Exists(cur) ? Directory.GetFiles(cur, "*.tmod").Select(Path.GetFileNameWithoutExtension).ToHashSet() : new HashSet<string>();
@@ -303,10 +303,10 @@ public static class PackStore
 		State.Active.Add(def.Id);
 		SaveState();
 		ActiveDirty = true;
-		JemMod.Instance.Logger.Info("Создана сборка Default из включённых модов");
+		JemMod.Instance.Logger.Info("Created Default pack from enabled mods");
 	}
 
-	/// <summary>Копия через временный файл: загруженный мод может читать старый файл, его нельзя перезаписывать на месте.</summary>
+	/// <summary>Copy via a temp file: a loaded mod may still read the old file, so never overwrite in place.</summary>
 	public static void SafeCopy(string src, string dest)
 	{
 		string tmp = dest + ".pmtmp";
@@ -320,7 +320,7 @@ public static class PackStore
 	[System.Runtime.InteropServices.DllImport("libc", EntryPoint = "link", SetLastError = true)]
 	private static extern int UnixLink(string oldPath, string newPath);
 
-	/// <summary>Жёсткая ссылка (мгновенно, без лишнего места), иначе копия. Результат всегда проверяется: под Wine ссылки бывают «успешными», но пустыми.</summary>
+	/// <summary>Hard link (instant, no extra space), otherwise a copy. Always verified: under Wine links can "succeed" yet produce nothing.</summary>
 	private static void LinkOrCopy(string src, string dest)
 	{
 		long size = new FileInfo(src).Length;
@@ -341,8 +341,8 @@ public static class PackStore
 	}
 
 	/// <summary>
-	/// После загрузки модов: переносит состояние галочек из стандартного меню в активные сборки
-	/// и копирует в них новые включённые моды.
+	/// After mods load: copy the enabled/disabled state from the standard Mods menu into the active packs
+	/// and add newly enabled mods to them.
 	/// </summary>
 	public static void SyncFromLoadedMods()
 	{
@@ -367,14 +367,14 @@ public static class PackStore
 			foreach (var pack in active)
 				pack.AddModFile(path, mod.Name, true);
 			ActiveDirty = true;
-			JemMod.Instance.Logger.Info($"{mod.Name} добавлен в активные сборки");
+			JemMod.Instance.Logger.Info($"{mod.Name} added to active packs");
 		}
 
 		foreach (var pack in active)
 			pack.Save();
 	}
 
-	/// <summary>Какие моды показывать в стандартном списке (null — показывать всё).</summary>
+	/// <summary>Mods to show in the standard Mods list (null = show everything).</summary>
 	public static HashSet<string> VisibleNames()
 	{
 		var active = ActivePacks.ToList();
@@ -386,9 +386,9 @@ public static class PackStore
 		return set;
 	}
 
-	// ---------- обновление ----------
+	// ---------- updating ----------
 
-	/// <summary>Подтягивает в сборку более новые версии её модов, которые уже лежат на диске (Workshop и т.п.). Возвращает список обновлённых.</summary>
+	/// <summary>Pulls newer versions of the pack's mods that are already on disk (Workshop etc.). Returns the updated ones.</summary>
 	public static List<string> UpdateFromDisk(Pack pack)
 	{
 		var updated = new List<string>();
@@ -406,7 +406,7 @@ public static class PackStore
 		return updated;
 	}
 
-	// ---------- импорт / экспорт ----------
+	// ---------- import / export ----------
 
 	public static void Export(Pack pack, string zipPath)
 	{
@@ -449,7 +449,7 @@ public static class PackStore
 			? Directory.GetDirectories(TmlPacksDir).Where(d => File.Exists(Path.Combine(d, "Mods", "enabled.json")))
 			: Enumerable.Empty<string>();
 
-	/// <summary>Импорт сборки из стандартного меню tML. Возвращает сборку и список модов, которых нет на диске.</summary>
+	/// <summary>Imports a pack from tML's own Mod Packs. Returns the pack and the mods missing on disk.</summary>
 	public static (Pack pack, List<string> missing) ImportTml(string tmlPackDir)
 	{
 		string modsDir = Path.Combine(tmlPackDir, "Mods");

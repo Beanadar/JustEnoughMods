@@ -1,1 +1,3 @@
-Несколько сборок модов, как инстансы в Prism: переключение, несколько активных одновременно, в списке модов только моды активных сборок.
+Instance-style mod pack manager, like Prism Launcher but inside the game. Keep several packs, activate one or more at once, and the Mods menu shows only the mods of the active packs. Export and import packs as .zip files.
+
+Менеджер сборок в духе инстансов Prism Launcher, прямо в игре. Несколько сборок, можно активировать одну или несколько сразу, в списке модов видны только моды активных сборок. Экспорт и импорт сборок в .zip.

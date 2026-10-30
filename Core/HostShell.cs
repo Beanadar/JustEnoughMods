@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace JustEnoughMods.Core;
 
-/// <summary>Системные окна: открыть папку, выбрать файл. Работает на Windows, Linux, macOS и под Wine/Proton.</summary>
+/// <summary>Native OS dialogs: open a folder, pick a file. Works on Windows, Linux, macOS and under Wine/Proton.</summary>
 public static class HostShell
 {
 	[DllImport("kernel32", CharSet = CharSet.Ansi)]
@@ -37,7 +37,7 @@ public static class HostShell
 		Directory.CreateDirectory(path);
 		try {
 			if (IsWine)
-				Run("winebrowser", FileUri(path)); // Wine передаёт в xdg-open хоста
+				Run("winebrowser", FileUri(path)); // Wine forwards this to the host's xdg-open
 			else if (OperatingSystem.IsWindows())
 				Run("explorer.exe", $"\"{path}\"");
 			else if (OperatingSystem.IsMacOS())
@@ -46,17 +46,17 @@ public static class HostShell
 				Run("xdg-open", $"\"{path}\"");
 		}
 		catch (Exception e) {
-			JemMod.Instance?.Logger.Warn("Не открылась папка " + path, e);
+			JemMod.Instance?.Logger.Warn("Failed to open folder " + path, e);
 		}
 	}
 
 	private static void Run(string file, string args)
 		=> Process.Start(new ProcessStartInfo(file, args) { UseShellExecute = false })?.Dispose();
 
-	/// <summary>Системный диалог открытия .zip. null — отмена. Блокирует поток.</summary>
+	/// <summary>Native open dialog for a .zip. null = cancelled. Blocks the calling thread.</summary>
 	public static string PickZip(string title) => FileDialog(title, null);
 
-	/// <summary>Системный диалог «Сохранить как» для .zip. null — отмена. Блокирует поток.</summary>
+	/// <summary>Native "Save as" dialog for a .zip. null = cancelled. Blocks the calling thread.</summary>
 	public static string SaveZip(string title, string defaultName) => FileDialog(title, defaultName);
 
 	private static string FileDialog(string title, string saveName)
@@ -93,8 +93,8 @@ public static class HostShell
 			: $"--file-selection --title=\"{title}\" --file-filter=\"*.zip\"";
 
 	/// <summary>
-	/// Под Wine/Proton: zenity хоста через /bin/sh. Wine не может дождаться Linux-процесса и прочитать его вывод,
-	/// поэтому ответ пишется во временный файл, а мы ждём файл-флаг. GTK_USE_PORTAL=1 — диалог от рабочего стола (в KDE — как в Dolphin).
+	/// Under Wine/Proton: host zenity via /bin/sh. Wine can't wait for a Linux process or read its output,
+	/// so the result goes to a temp file and we poll for a done-flag file. GTK_USE_PORTAL=1 makes the desktop provide the dialog (KDE: Dolphin-style).
 	/// </summary>
 	private static string WineHostDialog(string title, string saveName, out bool ran)
 	{
@@ -110,11 +110,11 @@ public static class HostShell
 			Process.Start(psi)?.Dispose();
 		}
 		catch (Exception e) {
-			JemMod.Instance?.Logger.Warn("Диалог хоста не запустился", e);
+			JemMod.Instance?.Logger.Warn("Host dialog failed to start", e);
 			return null;
 		}
 
-		// Файл вывода появляется сразу при запуске sh; нет его за 5 секунд — sh не запустился
+		// The output file appears as soon as sh starts; if it's missing after 5 s, sh didn't run
 		var started = DateTime.Now;
 		while (!File.Exists(doneWin)) {
 			System.Threading.Thread.Sleep(200);
@@ -126,8 +126,8 @@ public static class HostShell
 		try {
 			string code = File.ReadAllText(doneWin).Trim();
 			string result = File.Exists(outWin) ? File.ReadAllText(outWin).Trim() : "";
-			JemMod.Instance?.Logger.Info($"Диалог хоста: код {code}");
-			if (code == "127") { // zenity не найден
+			JemMod.Instance?.Logger.Info($"Host dialog exit code {code}");
+			if (code == "127") { // zenity not found
 				ran = false;
 				return null;
 			}
@@ -220,7 +220,7 @@ public static class HostShell
 			return ok ? Marshal.PtrToStringUni(buffer) : null;
 		}
 		catch (Exception e) {
-			JemMod.Instance?.Logger.Warn("Диалог выбора файла не открылся", e);
+			JemMod.Instance?.Logger.Warn("File dialog failed to open", e);
 			return null;
 		}
 		finally {
@@ -228,7 +228,7 @@ public static class HostShell
 		}
 	}
 
-	/// <summary>Диалог в фоне, результат — в главном потоке.</summary>
+	/// <summary>Runs a dialog in the background and delivers the result on the main thread.</summary>
 	public static void PickZipAsync(string title, Action<string> onPicked) => RunAsync(() => PickZip(title), onPicked);
 
 	public static void SaveZipAsync(string title, string defaultName, Action<string> onPicked) => RunAsync(() => SaveZip(title, defaultName), onPicked);
@@ -240,7 +240,7 @@ public static class HostShell
 			Terraria.Main.QueueMainThreadAction(() => onPicked(path));
 		}) { IsBackground = true };
 		if (OperatingSystem.IsWindows())
-			thread.SetApartmentState(System.Threading.ApartmentState.STA); // системным диалогам Windows нужен STA
+			thread.SetApartmentState(System.Threading.ApartmentState.STA); // Windows file dialogs require STA
 		thread.Start();
 	}
 }

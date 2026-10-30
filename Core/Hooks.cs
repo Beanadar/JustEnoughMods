@@ -13,7 +13,7 @@ public static class Hooks
 {
 	private const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
 
-	/// <summary>Временно выключить фильтр (когда менеджеру нужен полный список модов).</summary>
+	/// <summary>Temporarily disables the filter (when JEM needs the full mod list).</summary>
 	public static bool Bypass;
 
 	public static void Apply()
@@ -21,26 +21,26 @@ public static class Hooks
 		var findAllMods = Tml.ModOrganizer.GetMethod("FindAllMods", Any);
 		MonoModHooks.Modify(findAllMods, FilterFoundMods);
 
-		// Стандартное меню сборок открывают по-разному (menuMode, прямой SetState) — ловим всё в SetState.
+		// The standard Mod Packs menu is opened in several ways (menuMode, direct SetState); catch them all in SetState.
 		On_UserInterface.SetState += SwapPacksMenu;
 
-		// Надпись «Текущая сборка модов: _active» внизу меню — служебная, прячем.
+		// Hide tML's "Current mod pack: <folder>" label; the folder name is internal.
 		var drawVersion = typeof(Terraria.Main).GetMethod("DrawVersionNumber", Any);
 		MonoModHooks.Modify(drawVersion, HideStdModPackLabel);
 
-		// Моды из сборки в списке модов — обычным синим, а не голубым (откуда загружен, и так видно по значку)
+		// Show pack mods in the Mods list in the default blue instead of sky blue (the corner icon already shows the source)
 		var modItem = typeof(ModLoader).Assembly.GetType("Terraria.ModLoader.UI.UIModItem");
 		MonoModHooks.Modify(modItem.GetMethod("SetHoverColors", Any), DefaultColorForModpackMods);
 
 	}
 
 	/// <summary>
-	/// Подмена текстов tML. tML перечитывает локализацию после Load модов и при смене языка,
-	/// поэтому вызывается из PostSetupContent и на OnLanguageChanged.
+	/// Overrides tML texts. tML reloads localization after mods load and on language change,
+	/// so this runs from PostSetupContent and on OnLanguageChanged.
 	/// </summary>
 	public static void ApplyTexts()
 	{
-		ReplaceText("tModLoader.MenuModPackDescription", Loc.Ru ? "Переключение, создание, импорт и экспорт сборок модов." : "Switch, create, import and export mod packs.");
+		ReplaceText("tModLoader.MenuModPackDescription", Loc.T("WorkshopDescription");
 	}
 
 	public static void Unapply()
@@ -50,14 +50,14 @@ public static class Hooks
 		_replacedTexts.Clear();
 	}
 
-	// ---------- надпись внизу меню ----------
+	// ---------- bottom-of-menu label ----------
 
-	// `if (ModOrganizer.ModPackActive != null) { ... }` → условие всегда ложно
+	// `if (ModOrganizer.ModPackActive != null) { ... }` -> condition is always false
 	private static void HideStdModPackLabel(ILContext il)
 	{
 		var c = new ILCursor(il);
 		if (!c.TryGotoNext(MoveType.After, i => i.MatchLdsfld(Tml.ModOrganizer, "ModPackActive"))) {
-			JemMod.Instance.Logger.Warn("Не найдена стандартная надпись о сборке");
+			JemMod.Instance.Logger.Warn("Standard mod pack label not found");
 			return;
 		}
 		c.Emit(OpCodes.Pop);
@@ -87,7 +87,7 @@ public static class Hooks
 			hovered ? Terraria.ModLoader.UI.UICommon.DefaultUIBlueMouseOver : Terraria.ModLoader.UI.UICommon.DefaultUIBlue;
 	}
 
-	// ---------- подмена текстов tML ----------
+	// ---------- tML text overrides ----------
 
 	private static readonly List<(Terraria.Localization.LocalizedText, string)> _replacedTexts = new();
 
@@ -111,13 +111,13 @@ public static class Hooks
 		orig(self, state);
 	}
 
-	// ModOrganizer.FindAllMods: `return AllFoundMods = mods.ToArray();` → фильтруем массив после ToArray.
+	// ModOrganizer.FindAllMods: `return AllFoundMods = mods.ToArray();` -> filter the array after ToArray.
 	private static void FilterFoundMods(ILContext il)
 	{
 		var c = new ILCursor(il);
 		c.Index = c.Instrs.Count - 1;
 		if (!c.TryGotoPrev(MoveType.After, i => i.MatchCallOrCallvirt(out var m) && m.Name == "ToArray"))
-			throw new Exception("JustEnoughMods: не нашла ToArray в FindAllMods");
+			throw new Exception("JustEnoughMods: ToArray not found in FindAllMods");
 		c.Emit(OpCodes.Call, typeof(Hooks).GetMethod(nameof(Filter), Any));
 		c.Emit(OpCodes.Castclass, Tml.LocalMod.MakeArrayType());
 	}
@@ -144,14 +144,14 @@ public static class Hooks
 			return result;
 		}
 		catch (Exception e) {
-			JemMod.Instance?.Logger.Error("Фильтр модов упал, показываю всё", e);
+			JemMod.Instance?.Logger.Error("Mod filter failed, showing everything", e);
 			return found;
 		}
 	}
 
 	public static UIState GetPacksMenu() => JemMod.Menu;
 
-	/// <summary>Куда возвращаться из меню сборок — туда же, куда вернулось бы стандартное.</summary>
+	/// <summary>Where to go back from the packs menu: same place the standard menu would.</summary>
 	public static UIState PreviousOfStandardPacksMenu()
 	{
 		object std = Tml.Interface.GetField("modPacksMenu", Any)?.GetValue(null);

@@ -9,7 +9,7 @@ using Terraria.UI;
 
 namespace JustEnoughMods.UI;
 
-/// <summary>«Новый»: маленькое окно с выбором — создать или импортировать.</summary>
+/// <summary>"New": small dialog to create or import a pack.</summary>
 public class UINewPackDialog : UIState
 {
 	private readonly UIPackMenu _menu;
@@ -30,16 +30,16 @@ public class UINewPackDialog : UIState
 		};
 		root.Append(panel);
 
-		var header = new UITextPanel<string>(Loc.Ru ? "Новая сборка" : "New pack", 0.8f, true) {
+		var header = new UITextPanel<string>Loc.T("NewPack"), 0.8f, true) {
 			HAlign = 0.5f, Top = { Pixels = -35 }, BackgroundColor = new Color(73, 94, 171)
 		};
 		header.SetPadding(15);
 		root.Append(header);
 
-		AddOption(panel, Loc.Ru ? "Создать" : "Create", 8, () => _menu.CreateNew());
-		AddOption(panel, Loc.Ru ? "Импортировать из файла" : "Import from file", 60, () => _menu.ImportFromFile());
+		AddOption(panel, Loc.T("Create"), 8, () => _menu.CreateNew());
+		AddOption(panel, Loc.T("ImportFromFile"), 60, () => _menu.ImportFromFile());
 
-		var back = new UITextPanel<string>(Loc.Ru ? "Назад" : "Back", 0.7f, true) {
+		var back = new UITextPanel<string>Loc.T("Back"), 0.7f, true) {
 			Width = { Percent = 1f }, Height = { Pixels = 50 }, Top = { Pixels = 151 }
 		};
 		UIPackMenu.Hover(back);
@@ -53,7 +53,7 @@ public class UINewPackDialog : UIState
 	private static void AddOption(UIElement parent, string text, float top, Action click)
 	{
 		var b = new UITextPanel<string>(text, 0.9f) {
-			Width = { Percent = 1f }, Height = { Pixels = 44 }, Top = { Pixels = top } // отступы равные, с учётом шапки
+			Width = { Percent = 1f }, Height = { Pixels = 44 }, Top = { Pixels = top } // even spacing, accounting for the header
 		};
 		UIPackMenu.Hover(b);
 		b.OnLeftClick += (_, _) => { SoundEngine.PlaySound(SoundID.MenuOpen); click(); };
@@ -61,7 +61,7 @@ public class UINewPackDialog : UIState
 	}
 }
 
-/// <summary>Подтверждение удаления — как у персонажа: «Удалить X?», Да / Нет.</summary>
+/// <summary>Delete confirmation, like the character one: "Delete X?", Yes / No.</summary>
 public class UIConfirmDelete : UIState
 {
 	private readonly string _name;
@@ -75,7 +75,7 @@ public class UIConfirmDelete : UIState
 
 	public override void OnInitialize()
 	{
-		var title = new UIText((Loc.Ru ? "Удалить " : "Delete ") + _name + "?", 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } };
+		var title = new UIText(Loc.T("DeleteConfirm", _name), 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } };
 		Append(title);
 		Append(new MenuLink(Lang.menu[104].Value, 400, () => _onYes()));
 		Append(new MenuLink(Lang.menu[105].Value, 495, () => {
@@ -85,7 +85,7 @@ public class UIConfirmDelete : UIState
 	}
 }
 
-/// <summary>Пункт как в ванильном меню: серый, при наведении светлеет и чуть растёт.</summary>
+/// <summary>Vanilla-style menu entry: gray, brightens and grows slightly on hover.</summary>
 public class MenuLink : UIText
 {
 	private bool _hover, _shownHover;
@@ -111,18 +111,18 @@ public class MenuLink : UIText
 	}
 }
 
-/// <summary>Выход из меню сборок с изменениями: «нужно перезагрузить моды», ОК / Отмена.</summary>
+/// <summary>Leaving the packs menu with changes: reload prompt, OK / Cancel.</summary>
 public class UIConfirmReload : UIState
 {
 	public override void OnInitialize()
 	{
-		Append(new UIText(Loc.Ru ? "Перезагрузить моды?" : "Reload mods?", 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } });
-		Append(new UIText(Loc.Ru ? "Изменения вступят в силу после перезагрузки" : "Changes take effect after reloading", 1f) { HAlign = 0.5f, Top = { Pixels = 360 } });
-		Append(new MenuLink(Loc.Ru ? "ОК" : "OK", 410, () => {
+		Append(new UITextLoc.T("ReloadMods"), 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } });
+		Append(new UITextLoc.T("ChangesTakeEffectAfterReloading"), 1f) { HAlign = 0.5f, Top = { Pixels = 360 } });
+		Append(new MenuLinkLoc.T("Ok"), 410, () => {
 			SoundEngine.PlaySound(SoundID.MenuOpen);
 			PackStore.ApplyAndReload(returnToPacks: false);
 		}));
-		Append(new MenuLink(Loc.Ru ? "Отмена" : "Cancel", 505, () => {
+		Append(new MenuLinkLoc.T("Cancel"), 505, () => {
 			SoundEngine.PlaySound(SoundID.MenuClose);
 			Main.menuMode = Tml.ModPacksMenuID;
 		}));

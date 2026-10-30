@@ -15,7 +15,7 @@ using Terraria.UI;
 
 namespace JustEnoughMods.UI;
 
-/// <summary>Карточка сборки — по мотивам карточки персонажа.</summary>
+/// <summary>Pack card, modeled on the character card.</summary>
 public class UIPackItem : UIPanel
 {
 	public readonly Pack Pack;
@@ -27,7 +27,7 @@ public class UIPackItem : UIPanel
 	private readonly string _countText, _timeText;
 
 	private static Asset<Texture2D> Vanilla(string name) => Main.Assets.Request<Texture2D>("Images/UI/" + name, AssetRequestMode.ImmediateLoad);
-	private static Asset<Texture2D> Own(string name) => ModContent.Request<Texture2D>("JustEnoughMods/Assets/" + name, AssetRequestMode.ImmediateLoad); // размер нужен сразу для разметки
+	private static Asset<Texture2D> Own(string name) => ModContent.Request<Texture2D>("JustEnoughMods/Assets/" + name, AssetRequestMode.ImmediateLoad); // size is needed immediately for layout
 
 	public UIPackItem(Pack pack, UIPackMenu menu)
 	{
@@ -38,49 +38,49 @@ public class UIPackItem : UIPanel
 		Width.Set(0, 1f);
 		Height.Set(96, 0f);
 		SetPadding(6);
-		// Как у персонажа: подсветка при наведении, двойной клик по пустому месту — вкл/выкл
+		// Like the character card: highlight on hover, double-click empty space to toggle
 		BorderColor = new Color(89, 116, 213) * 0.7f;
 		BackgroundColor = new Color(63, 82, 151) * 0.7f;
 		OnMouseOver += (_, _) => { BackgroundColor = new Color(73, 94, 171); BorderColor = new Color(89, 116, 213); };
 		OnMouseOut += (_, _) => { BackgroundColor = new Color(63, 82, 151) * 0.7f; BorderColor = new Color(89, 116, 213) * 0.7f; };
 		OnLeftDoubleClick += (evt, el) => {
-			if (evt.Target == el) // не по кнопкам и иконке
+			if (evt.Target == el) // not on buttons or the icon
 				TogglePlay();
 		};
 
-		// Иконка: клик — выбрать предмет
+		// Icon: click to choose an item
 		_icon = new UIPackIcon(pack) { Left = { Pixels = 4 } };
 		_icon.OnLeftClick += (_, _) => _menu.AskIcon(Pack);
-		_icon.OnMouseOver += (_, _) => _tooltip = Loc.Ru ? "Сменить иконку" : "Change icon";
+		_icon.OnMouseOver += (_, _) => _tooltip = Loc.T("ChangeIcon");
 		_icon.OnMouseOut += (_, _) => _tooltip = null;
 		Append(_icon);
 
 		int total = pack.ModFiles().Length;
 		int on = _active ? pack.Enabled.Count : 0;
-		_countText = (Loc.Ru ? "Активно " : "Active ") + $"{on}/{total}";
+		_countText = Loc.T("ActiveCount", on, total);
 		var t = TimeSpan.FromSeconds(pack.PlaySeconds);
 		_timeText = $"{(int)t.TotalHours:00}:{t.Minutes:00}:{t.Seconds:00}";
 
-		// Нижний ряд кнопок — под иконкой, как у персонажа
+		// Bottom button row, under the icon like the character card
 		float x = 4;
-		AddButton(_active ? Own("ButtonStop") : Vanilla("ButtonPlay"), ref x, _active ? (Loc.Ru ? "Отключить" : "Disable") : (Loc.Ru ? "Включить" : "Enable"), TogglePlay);
+		AddButton(_active ? Own("ButtonStop") : Vanilla("ButtonPlay"), ref x, _active ? Loc.T("Disable") : Loc.T("Enable"), TogglePlay);
 		AddButton(Vanilla(pack.Favorite ? "ButtonFavoriteActive" : "ButtonFavoriteInactive"), ref x,
-			pack.Favorite ? (Loc.Ru ? "Убрать из избранного" : "Unfavorite") : (Loc.Ru ? "В избранное" : "Favorite"), ToggleFavorite);
-		AddButton(Vanilla("ButtonRename"), ref x, Loc.Ru ? "Переименовать" : "Rename", () => _menu.AskRename(Pack));
-		AddButton(Own("ButtonExport"), ref x, Loc.Ru ? "Экспортировать как файл" : "Export as file", () => _menu.Export(Pack));
+			pack.Favorite ? Loc.T("Unfavorite") : Loc.T("Favorite"), ToggleFavorite);
+		AddButton(Vanilla("ButtonRename"), ref x, Loc.T("Rename"), () => _menu.AskRename(Pack));
+		AddButton(Own("ButtonExport"), ref x, Loc.T("ExportAsFile"), () => _menu.Export(Pack));
 
-		// Справа: обновить сверху, удалить снизу
-		var update = new UIImageButton(Own("ButtonUpdate")) { HAlign = 1f, Top = { Pixels = -2 } }; // по строке названия
+		// Right side: update on top, delete at the bottom
+		var update = new UIImageButton(Own("ButtonUpdate")) { HAlign = 1f, Top = { Pixels = -2 } }; // aligned with the name line
 		update.SetVisibility(1f, 0.6f);
 		update.OnLeftClick += (_, _) => _menu.Update(Pack);
-		update.OnMouseOver += (_, _) => _tooltip = Loc.Ru ? "Обновить моды" : "Update mods";
+		update.OnMouseOver += (_, _) => _tooltip = Loc.T("UpdateMods");
 		update.OnMouseOut += (_, _) => _tooltip = null;
 		Append(update);
 
 		_deleteButton = new UIImageButton(Vanilla("ButtonDelete")) { HAlign = 1f, VAlign = 1f };
 		_deleteButton.SetVisibility(1f, 0.6f);
 		_deleteButton.OnLeftClick += (_, _) => _menu.AskDelete(Pack);
-		_deleteButton.OnMouseOver += (_, _) => _tooltip = Loc.Ru ? "Удалить" : "Delete";
+		_deleteButton.OnMouseOver += (_, _) => _tooltip = Loc.T("Delete");
 		_deleteButton.OnMouseOut += (_, _) => _tooltip = null;
 		Append(_deleteButton);
 	}
@@ -103,7 +103,7 @@ public class UIPackItem : UIPanel
 			PackStore.State.Active.Remove(Pack.Id);
 		else
 			PackStore.State.Active.Add(Pack.Id);
-		PackStore.Pending = true; // применится при выходе из меню
+		PackStore.Pending = true; // applied when leaving the menu
 		_menu.Refresh();
 	}
 
@@ -126,7 +126,7 @@ public class UIPackItem : UIPanel
 		return string.Compare(Pack.Name, other.Pack.Name, StringComparison.CurrentCultureIgnoreCase);
 	}
 
-	// Как UICharacterListItem: имя, разделитель, плашки InnerPanelBackground
+	// Like UICharacterListItem: name, divider, InnerPanelBackground info panels
 	protected override void DrawSelf(SpriteBatch spriteBatch)
 	{
 		base.DrawSelf(spriteBatch);
@@ -164,7 +164,7 @@ public class UIPackItem : UIPanel
 	}
 }
 
-/// <summary>Иконка сборки: рамка как у персонажа, внутри предмет. @tree — дерево, как у иконки миров.</summary>
+/// <summary>Pack icon: character-style frame with an item inside. @tree = the tree from the Worlds icon.</summary>
 public class UIPackIcon : UIElement
 {
 	private readonly Pack _pack;

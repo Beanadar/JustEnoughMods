@@ -10,7 +10,7 @@ using Terraria.UI;
 
 namespace JustEnoughMods.UI;
 
-/// <summary>Меню «Сборки модов» вместо стандартного. Разметка как у выбора персонажа.</summary>
+/// <summary>Replacement for the standard Mod Packs menu. Layout follows the character select menu.</summary>
 public class UIPackMenu : UIState
 {
 	public static readonly Color PanelColor = new Color(33, 43, 79) * 0.8f;
@@ -28,7 +28,7 @@ public class UIPackMenu : UIState
 			Top = { Pixels = 220 }, Height = { Pixels = -220, Percent = 1f },
 			HAlign = 0.5f
 		};
-		root.MaxWidth.Set(650f, 0f); // как у меню персонажей
+		root.MaxWidth.Set(650f, 0f); // same as the character menu
 		Append(root);
 
 		var panel = new UIPanel {
@@ -44,7 +44,7 @@ public class UIPackMenu : UIState
 		_list.SetScrollbar(scroll);
 		panel.Append(scroll);
 
-		var header = new UITextPanel<string>(Loc.Ru ? "Сборки модов" : "Mod Packs", 0.8f, true) {
+		var header = new UITextPanel<string>Loc.T("ModPacks"), 0.8f, true) {
 			HAlign = 0.5f, Top = { Pixels = -40 }, BackgroundColor = new Color(73, 94, 171)
 		};
 		header.SetPadding(15);
@@ -53,11 +53,11 @@ public class UIPackMenu : UIState
 		_status = new UIText("", 0.9f) { Top = { Pixels = -132, Percent = 1f }, HAlign = 0.5f };
 		root.Append(_status);
 
-		var back = MakeButton(Loc.Ru ? "Назад" : "Back", 0f);
+		var back = MakeButtonLoc.T("Back"), 0f);
 		back.OnLeftClick += (_, _) => Back();
 		root.Append(back);
 
-		var create = MakeButton(Loc.Ru ? "Новый" : "New", 1f);
+		var create = MakeButtonLoc.T("New"), 1f);
 		create.OnLeftClick += (_, _) => {
 			SoundEngine.PlaySound(SoundID.MenuOpen);
 			Main.MenuUI.SetState(new UINewPackDialog(this));
@@ -84,7 +84,7 @@ public class UIPackMenu : UIState
 
 	public override void OnActivate()
 	{
-		if (!PackStore.Pending) // иначе потеряем несохранённые переключения
+		if (!PackStore.Pending) // otherwise unapplied toggles would be lost
 			PackStore.LoadAll();
 		Refresh();
 	}
@@ -116,17 +116,17 @@ public class UIPackMenu : UIState
 		}
 	}
 
-	// ---------- действия карточек ----------
+	// ---------- card actions ----------
 
-	public void AskRename(Pack pack) => AskText(Loc.Ru ? "Название сборки" : "Pack name", pack.Name, name => {
+	public void AskRename(Pack pack) => AskTextLoc.T("PackName"), pack.Name, name => {
 		pack.Name = name;
 		pack.Save();
 	});
 
-	public void AskIcon(Pack pack) => AskText(Loc.Ru ? "Предмет: название или ID" : "Item: name or ID", "", text => {
+	public void AskIcon(Pack pack) => AskTextLoc.T("ItemNameOrId"), "", text => {
 		int id = FindItem(text);
 		if (id <= 0) {
-			SetStatus(Loc.Ru ? "Предмет не найден" : "Item not found", true);
+			SetStatusLoc.T("ItemNotFound"), true);
 			return;
 		}
 		pack.Icon = ItemID.Search.GetName(id);
@@ -155,18 +155,18 @@ public class UIPackMenu : UIState
 
 	public void Export(Pack pack)
 	{
-		HostShell.SaveZipAsync(Loc.Ru ? "Экспорт сборки" : "Export pack", PackStore.SafeFileName(pack.Name) + ".zip", path => {
+		HostShell.SaveZipAsyncLoc.T("ExportPack"), PackStore.SafeFileName(pack.Name) + ".zip", path => {
 			if (path == null)
 				return;
-			SetStatus(Loc.Ru ? "Экспорт…" : "Exporting…");
-			System.Threading.Tasks.Task.Run(() => { // сотни МБ — не держим игру
+			SetStatusLoc.T("Exporting");
+			System.Threading.Tasks.Task.Run(() => { // hundreds of MB, don't block the game
 				try {
 					PackStore.Export(pack, path);
-					Main.QueueMainThreadAction(() => SetStatus(Loc.Ru ? "Сборка экспортирована" : "Pack exported"));
+					Main.QueueMainThreadAction(() => SetStatusLoc.T("PackExported"));
 				}
 				catch (Exception e) {
-					JemMod.Instance.Logger.Error("Экспорт " + path, e);
-					Main.QueueMainThreadAction(() => SetStatus(Loc.Ru ? "Ошибка экспорта" : "Export failed", true));
+					JemMod.Instance.Logger.Error("Export " + path, e);
+					Main.QueueMainThreadAction(() => SetStatusLoc.T("ExportFailed"), true));
 				}
 			});
 		});
@@ -176,10 +176,10 @@ public class UIPackMenu : UIState
 	{
 		var updated = PackStore.UpdateFromDisk(pack);
 		if (updated.Count == 0) {
-			SetStatus(Loc.Ru ? "Обновлений нет" : "No updates");
+			SetStatusLoc.T("NoUpdates");
 			return;
 		}
-		SetStatus((Loc.Ru ? "Обновлено модов: " : "Mods updated: ") + updated.Count);
+		SetStatus(Loc.T("ModsUpdated", updated.Count));
 		if (PackStore.IsActive(pack))
 			PackStore.Pending = true;
 	}
@@ -195,24 +195,24 @@ public class UIPackMenu : UIState
 
 	public void ImportFromFile()
 	{
-		HostShell.PickZipAsync(Loc.Ru ? "Импорт сборки" : "Import pack", path => {
+		HostShell.PickZipAsyncLoc.T("ImportPack"), path => {
 			Main.menuMode = Tml.ModPacksMenuID;
 			if (path == null)
 				return;
 			try {
 				var pack = PackStore.ImportZip(path);
-				SetStatus((Loc.Ru ? "Импортировано: " : "Imported: ") + pack.Name);
+				SetStatus(Loc.T("Imported", pack.Name));
 			}
 			catch (Exception e) {
-				JemMod.Instance.Logger.Error("Импорт " + path, e);
-				SetStatus(Loc.Ru ? "Ошибка импорта" : "Import failed", true);
+				JemMod.Instance.Logger.Error("Import " + path, e);
+				SetStatusLoc.T("ImportFailed"), true);
 			}
 		});
 	}
 
-	public void CreateNew() => AskText(Loc.Ru ? "Название сборки" : "Pack name", "", name => PackStore.Create(name));
+	public void CreateNew() => AskTextLoc.T("PackName"), "", name => PackStore.Create(name));
 
-	// ---------- ввод текста ----------
+	// ---------- text input ----------
 
 	private static void AskText(string label, string start, Action<string> submit)
 	{

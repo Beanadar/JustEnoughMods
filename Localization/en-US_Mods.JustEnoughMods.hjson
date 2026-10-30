@@ -1,1 +1,36 @@
-
+UI: {
+	ModPacks: Mod Packs
+	WorkshopDescription: Switch, create, import and export mod packs.
+	Back: Back
+	New: New
+	NewPack: New pack
+	Create: Create
+	ImportFromFile: Import from file
+	PackName: Pack name
+	ActiveCount: Active {0}/{1}
+	Enable: Enable
+	Disable: Disable
+	Favorite: Favorite
+	Unfavorite: Unfavorite
+	Rename: Rename
+	ExportAsFile: Export as file
+	UpdateMods: Update mods
+	Delete: Delete
+	DeleteConfirm: Delete {0}?
+	ChangeIcon: Change icon
+	ItemNameOrId: "Item: name or ID"
+	ItemNotFound: Item not found
+	ReloadMods: Reload mods?
+	ChangesTakeEffectAfterReloading: Changes take effect after reloading
+	Ok: OK
+	Cancel: Cancel
+	ExportPack: Export pack
+	Exporting: Exporting…
+	PackExported: Pack exported
+	ExportFailed: Export failed
+	NoUpdates: No updates
+	ModsUpdated: "Mods updated: {0}"
+	ImportPack: Import pack
+	Imported: "Imported: {0}"
+	ImportFailed: Import failed
+}

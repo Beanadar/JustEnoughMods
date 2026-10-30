@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 
 namespace JustEnoughMods.Core;
 
-/// <summary>Доступ к внутренностям tModLoader через рефлексию.</summary>
+/// <summary>Access to tModLoader internals via reflection.</summary>
 public static class Tml
 {
 	private const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
@@ -67,7 +67,7 @@ public static class Tml
 			(DateTime)t.GetField("lastModified", Any).GetValue(localMod));
 	}
 
-	/// <summary>Все моды на диске, без фильтра менеджера.</summary>
+	/// <summary>All mods on disk, bypassing the JEM filter.</summary>
 	public static List<FoundMod> FindAllModsRaw()
 	{
 		Hooks.Bypass = true;

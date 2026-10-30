@@ -40,7 +40,7 @@ public class JemMod : Mod
 			PackStore.SyncFromLoadedMods();
 		}
 		catch (Exception e) {
-			Logger.Error("Не удалось синхронизировать сборки", e);
+			Logger.Error("Failed to sync packs", e);
 		}
 		Hooks.ApplyTexts();
 		Terraria.Localization.LanguageManager.Instance.OnLanguageChanged += OnLanguageChanged;
@@ -55,7 +55,7 @@ public class JemMod : Mod
 		if (!Main.dedServ) {
 			Main.instance.Exiting -= OnExiting;
 			Terraria.Localization.LanguageManager.Instance.OnLanguageChanged -= OnLanguageChanged;
-			PackStore.FlushActiveIfDirty(); // моды выгружены — следующая загрузка возьмёт новую _active
+			PackStore.FlushActiveIfDirty(); // mods are unloaded; the next load picks up the new active folder
 		}
 		Hooks.Unapply();
 		_menu = null;
@@ -63,7 +63,7 @@ public class JemMod : Mod
 	}
 }
 
-/// <summary>Наигранное время активных сборок.</summary>
+/// <summary>Play time of the active packs.</summary>
 public class PlayTimeSystem : ModSystem
 {
 	private DateTime? _start;

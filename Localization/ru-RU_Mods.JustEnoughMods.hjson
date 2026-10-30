@@ -1,0 +1,36 @@
+UI: {
+	ModPacks: Сборки модов
+	WorkshopDescription: Переключение, создание, импорт и экспорт сборок модов.
+	Back: Назад
+	New: Новый
+	NewPack: Новая сборка
+	Create: Создать
+	ImportFromFile: Импортировать из файла
+	PackName: Название сборки
+	ActiveCount: Активно {0}/{1}
+	Enable: Включить
+	Disable: Отключить
+	Favorite: В избранное
+	Unfavorite: Убрать из избранного
+	Rename: Переименовать
+	ExportAsFile: Экспортировать как файл
+	UpdateMods: Обновить моды
+	Delete: Удалить
+	DeleteConfirm: Удалить {0}?
+	ChangeIcon: Сменить иконку
+	ItemNameOrId: "Предмет: название или ID"
+	ItemNotFound: Предмет не найден
+	ReloadMods: Перезагрузить моды?
+	ChangesTakeEffectAfterReloading: Изменения вступят в силу после перезагрузки
+	Ok: ОК
+	Cancel: Отмена
+	ExportPack: Экспорт сборки
+	Exporting: Экспорт…
+	PackExported: Сборка экспортирована
+	ExportFailed: Ошибка экспорта
+	NoUpdates: Обновлений нет
+	ModsUpdated: "Обновлено модов: {0}"
+	ImportPack: Импорт сборки
+	Imported: "Импортировано: {0}"
+	ImportFailed: Ошибка импорта
+}
