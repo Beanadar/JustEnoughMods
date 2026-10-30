@@ -30,7 +30,7 @@ public class UINewPackDialog : UIState
 		};
 		root.Append(panel);
 
-		var header = new UITextPanel<string>Loc.T("NewPack"), 0.8f, true) {
+		var header = new UITextPanel<string>(Loc.T("NewPack"), 0.8f, true) {
 			HAlign = 0.5f, Top = { Pixels = -35 }, BackgroundColor = new Color(73, 94, 171)
 		};
 		header.SetPadding(15);
@@ -39,7 +39,7 @@ public class UINewPackDialog : UIState
 		AddOption(panel, Loc.T("Create"), 8, () => _menu.CreateNew());
 		AddOption(panel, Loc.T("ImportFromFile"), 60, () => _menu.ImportFromFile());
 
-		var back = new UITextPanel<string>Loc.T("Back"), 0.7f, true) {
+		var back = new UITextPanel<string>(Loc.T("Back"), 0.7f, true) {
 			Width = { Percent = 1f }, Height = { Pixels = 50 }, Top = { Pixels = 151 }
 		};
 		UIPackMenu.Hover(back);
@@ -116,13 +116,13 @@ public class UIConfirmReload : UIState
 {
 	public override void OnInitialize()
 	{
-		Append(new UITextLoc.T("ReloadMods"), 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } });
-		Append(new UITextLoc.T("ChangesTakeEffectAfterReloading"), 1f) { HAlign = 0.5f, Top = { Pixels = 360 } });
-		Append(new MenuLinkLoc.T("Ok"), 410, () => {
+		Append(new UIText(Loc.T("ReloadMods"), 1f, true) { HAlign = 0.5f, Top = { Pixels = 305 } });
+		Append(new UIText(Loc.T("ChangesTakeEffectAfterReloading"), 1f) { HAlign = 0.5f, Top = { Pixels = 360 } });
+		Append(new MenuLink(Loc.T("Ok"), 410, () => {
 			SoundEngine.PlaySound(SoundID.MenuOpen);
 			PackStore.ApplyAndReload(returnToPacks: false);
 		}));
-		Append(new MenuLinkLoc.T("Cancel"), 505, () => {
+		Append(new MenuLink(Loc.T("Cancel"), 505, () => {
 			SoundEngine.PlaySound(SoundID.MenuClose);
 			Main.menuMode = Tml.ModPacksMenuID;
 		}));

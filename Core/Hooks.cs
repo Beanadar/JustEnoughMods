@@ -40,7 +40,7 @@ public static class Hooks
 	/// </summary>
 	public static void ApplyTexts()
 	{
-		ReplaceText("tModLoader.MenuModPackDescription", Loc.T("WorkshopDescription");
+		ReplaceText("tModLoader.MenuModPackDescription", Loc.T("WorkshopDescription"));
 	}
 
 	public static void Unapply()

@@ -44,7 +44,7 @@ public class UIPackMenu : UIState
 		_list.SetScrollbar(scroll);
 		panel.Append(scroll);
 
-		var header = new UITextPanel<string>Loc.T("ModPacks"), 0.8f, true) {
+		var header = new UITextPanel<string>(Loc.T("ModPacks"), 0.8f, true) {
 			HAlign = 0.5f, Top = { Pixels = -40 }, BackgroundColor = new Color(73, 94, 171)
 		};
 		header.SetPadding(15);
@@ -53,11 +53,11 @@ public class UIPackMenu : UIState
 		_status = new UIText("", 0.9f) { Top = { Pixels = -132, Percent = 1f }, HAlign = 0.5f };
 		root.Append(_status);
 
-		var back = MakeButtonLoc.T("Back"), 0f);
+		var back = MakeButton(Loc.T("Back"), 0f);
 		back.OnLeftClick += (_, _) => Back();
 		root.Append(back);
 
-		var create = MakeButtonLoc.T("New"), 1f);
+		var create = MakeButton(Loc.T("New"), 1f);
 		create.OnLeftClick += (_, _) => {
 			SoundEngine.PlaySound(SoundID.MenuOpen);
 			Main.MenuUI.SetState(new UINewPackDialog(this));
@@ -118,15 +118,15 @@ public class UIPackMenu : UIState
 
 	// ---------- card actions ----------
 
-	public void AskRename(Pack pack) => AskTextLoc.T("PackName"), pack.Name, name => {
+	public void AskRename(Pack pack) => AskText(Loc.T("PackName"), pack.Name, name => {
 		pack.Name = name;
 		pack.Save();
 	});
 
-	public void AskIcon(Pack pack) => AskTextLoc.T("ItemNameOrId"), "", text => {
+	public void AskIcon(Pack pack) => AskText(Loc.T("ItemNameOrId"), "", text => {
 		int id = FindItem(text);
 		if (id <= 0) {
-			SetStatusLoc.T("ItemNotFound"), true);
+			SetStatus(Loc.T("ItemNotFound"), true);
 			return;
 		}
 		pack.Icon = ItemID.Search.GetName(id);
@@ -155,18 +155,18 @@ public class UIPackMenu : UIState
 
 	public void Export(Pack pack)
 	{
-		HostShell.SaveZipAsyncLoc.T("ExportPack"), PackStore.SafeFileName(pack.Name) + ".zip", path => {
+		HostShell.SaveZipAsync(Loc.T("ExportPack"), PackStore.SafeFileName(pack.Name) + ".zip", path => {
 			if (path == null)
 				return;
-			SetStatusLoc.T("Exporting");
+			SetStatus(Loc.T("Exporting"));
 			System.Threading.Tasks.Task.Run(() => { // hundreds of MB, don't block the game
 				try {
 					PackStore.Export(pack, path);
-					Main.QueueMainThreadAction(() => SetStatusLoc.T("PackExported"));
+					Main.QueueMainThreadAction(() => SetStatus(Loc.T("PackExported")));
 				}
 				catch (Exception e) {
 					JemMod.Instance.Logger.Error("Export " + path, e);
-					Main.QueueMainThreadAction(() => SetStatusLoc.T("ExportFailed"), true));
+					Main.QueueMainThreadAction(() => SetStatus(Loc.T("ExportFailed"), true));
 				}
 			});
 		});
@@ -176,7 +176,7 @@ public class UIPackMenu : UIState
 	{
 		var updated = PackStore.UpdateFromDisk(pack);
 		if (updated.Count == 0) {
-			SetStatusLoc.T("NoUpdates");
+			SetStatus(Loc.T("NoUpdates"));
 			return;
 		}
 		SetStatus(Loc.T("ModsUpdated", updated.Count));
@@ -195,7 +195,7 @@ public class UIPackMenu : UIState
 
 	public void ImportFromFile()
 	{
-		HostShell.PickZipAsyncLoc.T("ImportPack"), path => {
+		HostShell.PickZipAsync(Loc.T("ImportPack"), path => {
 			Main.menuMode = Tml.ModPacksMenuID;
 			if (path == null)
 				return;
@@ -205,12 +205,12 @@ public class UIPackMenu : UIState
 			}
 			catch (Exception e) {
 				JemMod.Instance.Logger.Error("Import " + path, e);
-				SetStatusLoc.T("ImportFailed"), true);
+				SetStatus(Loc.T("ImportFailed"), true);
 			}
 		});
 	}
 
-	public void CreateNew() => AskTextLoc.T("PackName"), "", name => PackStore.Create(name));
+	public void CreateNew() => AskText(Loc.T("PackName"), "", name => PackStore.Create(name));
 
 	// ---------- text input ----------
 
